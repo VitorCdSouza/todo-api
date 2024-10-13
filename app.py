@@ -23,5 +23,13 @@ def get_todos():
         "total": len(todos)
     })
 
+# http://127.0.0.1:5000/todos/<id>
+@app.route('/todos/<int:todo_id>', methods=['GET'])
+def get_todo(todo_id):
+    todo = todo_manager.get_by_id(todo_id)
+    if todo:
+        return jsonify(todo)
+    return jsonify({"error": "Todo not found"}), 404
+
 if __name__ == '__main__':
     app.run(debug=True)
