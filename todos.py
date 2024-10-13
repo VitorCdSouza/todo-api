@@ -1,6 +1,6 @@
-# todos.py
-
 from enum import Enum
+from db import get_db_connection
+from psycopg2.extras import RealDictCursor
 
 # todo status enums
 class TodoStatus(Enum):
@@ -9,49 +9,55 @@ class TodoStatus(Enum):
     COMPLETA = "completa"
 
 class TodoManager:
-    def __init__(self):
-        self.todos = [
-            {"id": 1, "title": "Tarefa 1", "description": "Descricao 1", "status": TodoStatus.COMPLETA.value},
-            {"id": 2, "title": "Tarefa 2", "description": "Descricao 2", "status": TodoStatus.PENDENTE.value},
-            {"id": 3, "title": "Tarefa 3", "description": "Descricao 3", "status": TodoStatus.INCOMPLETA.value},
-            {"id": 4, "title": "Tarefa 4", "description": "Descricao 4", "status": TodoStatus.COMPLETA.value},
-            {"id": 5, "title": "Tarefa 5", "description": "Descricao 5", "status": TodoStatus.INCOMPLETA.value},
-            {"id": 6, "title": "Tarefa 6", "description": "Descricao 6", "status": TodoStatus.PENDENTE.value}
-        ]
-        self.current_id = 3
-    
     def get_all(self):
-        return self.todos
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute('SELECT * FROM todos')
+        todos = cur.fetchall()
+        cur.close()
+        conn.close()
+        return todos
     
     def get_by_id(self, todo_id):
-        return next((todo for todo in self.todos if todo['id'] == todo_id), None)
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute('SELECT * FROM todos WHERE id = %s', (todo_id,))
+        todo = cur.fetchone()
+        cur.close()
+        conn.close()
+        return todo
     
     def create(self, title, description='', status=TodoStatus.PENDENTE.value):
-        new_todo = {
-            "id": self.current_id,
-            "title": title,
-            "description": description,
-            "status": status
-        }
-        self.todos.append(new_todo)
-        self.current_id += 1
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute(
+            'INSERT INTO todos (title, description, status) VALUES (%s, %s, %s) RETURNING *',
+            (title, description, status)
+        )
+        new_todo = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
         return new_todo
     
     def update(self, todo_id, title=None, description=None, status=None):
-        todo = self.get_by_id(todo_id)
-        if todo:
-            if title is not None:
-                todo['title'] = title
-            if description is not None:
-                todo['description'] = description
-            if status is not None and status in TodoStatus._value2member_map_:
-                todo['status'] = status
-            return todo
-        return None
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        cur.execute(
+            'UPDATE todos SET title = %s, description = %s, status = %s WHERE id = %s RETURNING *',
+            (title, description, status, todo_id)
+        )
+        updated_todo = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+        return updated_todo
     
     def delete(self, todo_id):
-        todo = self.get_by_id(todo_id)
-        if todo:
-            self.todos = [t for t in self.todos if t['id'] != todo_id]
-            return True
-        return False
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('DELETE FROM todos WHERE id = %s', (todo_id,))
+        conn.commit()
+        cur.close()
+        conn.close()
+        return True
