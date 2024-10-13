@@ -75,8 +75,9 @@ def get_todo(todo_id):
 @app.route("/todos", methods=["POST"])
 def create_todo():
     data = request.get_json()
-    if not data or "title" not in data:
-        return jsonify({"error": "Title is required"}), 400
+
+    if not data or 'title' not in data or not data['title'].strip():
+        return jsonify({"error": "O título da tarefa é obrigatório"}), 400
 
     status = data.get("status", TodoStatus.PENDENTE.value)
     if status not in TodoStatus._value2member_map_:
@@ -106,7 +107,7 @@ def update_todo(todo_id):
         return jsonify({"error": "Invalid status"}), 400
 
     updated_todo = todo_manager.update(
-        todo_id=todo_id,
+        todo_id,  # Passando o todo_id aqui
         title=data.get("title"),
         description=data.get("description"),
         status=status,

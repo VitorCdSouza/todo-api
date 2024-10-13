@@ -14,7 +14,7 @@ class TodoManager:
     def get_all(self):
         conn = get_db_connection()
         cur = conn.cursor(cursor_factory=RealDictCursor)
-        cur.execute("SELECT * FROM todos")
+        cur.execute("SELECT * FROM todos ORDER BY id")
         todos = cur.fetchall()
         cur.close()
         conn.close()
@@ -46,11 +46,30 @@ class TodoManager:
     def update(self, todo_id, title=None, description=None, status=None):
         conn = get_db_connection()
         cur = conn.cursor(cursor_factory=RealDictCursor)
-        cur.execute(
-            "UPDATE todos SET title = %s, description = %s, status = %s "
-            "WHERE id = %s RETURNING *",
-            (title, description, status, todo_id),
+
+        set_clause = []
+        params = []
+
+        if title is not None:
+            set_clause.append("title = %s")
+            params.append(title)
+        if description is not None:
+            set_clause.append("description = %s")
+            params.append(description)
+        if status is not None:
+            set_clause.append("status = %s")
+            params.append(status)
+
+        params.append(todo_id)
+
+        query = (
+            "UPDATE todos SET "
+            f"{', '.join(set_clause)} "
+            "WHERE id = %s RETURNING *"
         )
+
+        cur.execute(query, params)
+
         updated_todo = cur.fetchone()
         conn.commit()
         cur.close()
