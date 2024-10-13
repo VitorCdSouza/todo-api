@@ -2,10 +2,12 @@ import json
 
 import redis
 from flask import Flask, jsonify, request
+from flask_cors import CORS
 
 from todos import TodoManager, TodoStatus
 
 app = Flask(__name__)
+CORS(app)
 
 r = redis.Redis(host="localhost", port=6379, db=0, decode_responses=True)
 
