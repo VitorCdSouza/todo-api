@@ -1,4 +1,5 @@
 Flask
 Flask-Cors
+Flas-Limiter
 psycopg2-binary
 redis

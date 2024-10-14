@@ -1,7 +1,9 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
+
 from app.routes import todos
 from app.config import Config
+from app.utils import limiter
 
 
 # starting app with CORS
@@ -9,6 +11,8 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
     CORS(app)
+
+    limiter.init_app(app)
 
     # handling OPTIONS for Cross Origin
     @app.route('/todos', methods=['OPTIONS'])
