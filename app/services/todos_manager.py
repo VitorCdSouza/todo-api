@@ -5,6 +5,16 @@ from psycopg2.extras import RealDictCursor
 
 # methods for todo
 class TodoManager:
+    def get_by_user_id(self, user_id):
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+        query = "SELECT * FROM todos WHERE user_id = %s ORDER BY id"
+        cur.execute(query, (user_id,))
+        todos = cur.fetchall()
+        cur.close()
+        conn.close()
+        return todos
+
     def get_all(self):
         conn = get_db_connection()
         cur = conn.cursor(cursor_factory=RealDictCursor)
@@ -14,33 +24,40 @@ class TodoManager:
         conn.close()
         return todos
 
-    def get_by_id(self, todo_id):
+    def get_by_id(self, todo_id, user_id):
         conn = get_db_connection()
         cur = conn.cursor(cursor_factory=RealDictCursor)
-        cur.execute("SELECT * FROM todos WHERE id = %s", (todo_id,))
+        query = "SELECT * FROM todos WHERE id = %s AND user_id = %s"
+        cur.execute(query, (todo_id, user_id))
         todo = cur.fetchone()
         cur.close()
         conn.close()
         return todo
 
-    def create(self, title, description="", status=TodoStatus.PENDENTE.value):
+    def create(
+            self, title, description="",
+            status=TodoStatus.PENDENTE.value,
+            user_id=None):
         conn = get_db_connection()
         cur = conn.cursor(cursor_factory=RealDictCursor)
-        cur.execute(
-            "INSERT INTO todos (title, description, status) "
-            "VALUES (%s, %s, %s) RETURNING *",
-            (title, description, status),
+        query = (
+            "INSERT INTO todos (title, description, status, user_id) "
+            "VALUES (%s, %s, %s, %s) RETURNING *"
         )
+        cur.execute(query, (title, description, status, user_id))
         new_todo = cur.fetchone()
         conn.commit()
         cur.close()
         conn.close()
         return new_todo
 
-    def update(self, todo_id, title=None, description=None, status=None):
+    def update(
+            self, todo_id, title=None,
+            description=None, status=None, user_id=None):
         conn = get_db_connection()
         cur = conn.cursor(cursor_factory=RealDictCursor)
 
+        # Atualiza apenas os campos que foram fornecidos
         set_clause = []
         params = []
 
@@ -55,25 +72,26 @@ class TodoManager:
             params.append(status)
 
         params.append(todo_id)
+        params.append(user_id)
 
         query = (
             "UPDATE todos SET "
             f"{', '.join(set_clause)} "
-            "WHERE id = %s RETURNING *"
+            "WHERE id = %s AND user_id = %s RETURNING *"
         )
 
         cur.execute(query, params)
-
         updated_todo = cur.fetchone()
         conn.commit()
         cur.close()
         conn.close()
         return updated_todo
 
-    def delete(self, todo_id):
+    def delete(self, todo_id, user_id):
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute("DELETE FROM todos WHERE id = %s", (todo_id,))
+        query = "DELETE FROM todos WHERE id = %s AND user_id = %s"
+        cur.execute(query, (todo_id, user_id))
         conn.commit()
         cur.close()
         conn.close()

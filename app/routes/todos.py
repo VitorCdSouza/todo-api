@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+from flask_jwt_extended import jwt_required, get_jwt_identity
 
 from app.utils import limiter
 from app.services.todos_manager import TodoManager
@@ -14,11 +15,14 @@ todo_manager = TodoManager()
 # params: ?per_page= nor ?page=
 @limiter.limit("50 per minute")
 @bp.route("/", methods=["GET"])
+@jwt_required()
 def get_todos():
     page = request.args.get("page", 1, type=int)
     per_page = request.args.get("per_page", 3, type=int)
 
-    todos = cache_todos()
+    user_id = get_jwt_identity()
+    todos = todo_manager.get_by_user_id(user_id)
+
     start = (page - 1) * per_page
     end = start + per_page
     paginated_todos = todos[start:end]
@@ -36,8 +40,10 @@ def get_todos():
 # GET http://127.0.0.1:5000/todos/<id>
 @limiter.limit("50 per minute")
 @bp.route("/<int:todo_id>", methods=["GET"])
+@jwt_required()
 def get_todo(todo_id):
-    todo = get_cached_todo(todo_id) or todo_manager.get_by_id(todo_id)
+    user_id = get_jwt_identity()
+    todo = get_cached_todo(todo_id) or todo_manager.get_by_id(todo_id, user_id)
     if todo:
         cache_todo(todo)
         return jsonify(todo)
@@ -47,7 +53,9 @@ def get_todo(todo_id):
 # POST http://127.0.0.1:5000/todos/
 @limiter.limit("20 per minute")
 @bp.route("/", methods=["POST"])
+@jwt_required()
 def create_todo():
+    user_id = get_jwt_identity()
     data = request.get_json()
     if not data or "title" not in data or not data["title"].strip():
         return jsonify({"error": "O título da tarefa é obrigatório"}), 400
@@ -56,7 +64,8 @@ def create_todo():
     new_todo = todo_manager.create(
         data["title"],
         data.get("description", ""),
-        status
+        status,
+        user_id=user_id
     )
 
     cache_todos()
@@ -67,8 +76,10 @@ def create_todo():
 # PUT http://127.0.0.1:5000/todos/<id>
 @limiter.limit("50 per minute")
 @bp.route("/<int:todo_id>", methods=["PUT"])
+@jwt_required()
 def update_todo(todo_id):
-    todo = todo_manager.get_by_id(todo_id)
+    user_id = get_jwt_identity()
+    todo = todo_manager.get_by_id(todo_id, user_id)
     if not todo:
         return jsonify({"error": "Todo not found"}), 404
 
@@ -88,8 +99,10 @@ def update_todo(todo_id):
 # DELETE http://127.0.0.1:5000/todos/<id>
 @limiter.limit("20 per minute")
 @bp.route("/<int:todo_id>", methods=["DELETE"])
-def delete_todo(todo_id):
-    success = todo_manager.delete(todo_id)
+@jwt_required()
+def delete_todo(todo_id):   
+    user_id = get_jwt_identity()
+    success = todo_manager.delete(todo_id, user_id)
 
     if success:
         cache_todos()

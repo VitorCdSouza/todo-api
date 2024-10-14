@@ -1,7 +1,8 @@
 from flask import Flask, jsonify
 from flask_cors import CORS
+from flask_jwt_extended import JWTManager
 
-from app.routes import todos
+from app.routes import todos, users
 from app.config import Config
 from app.utils import limiter
 
@@ -10,6 +11,8 @@ from app.utils import limiter
 def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
+
+    JWTManager(app)
     CORS(app)
 
     limiter.init_app(app)
@@ -30,5 +33,6 @@ def create_app():
         return response
 
     app.register_blueprint(todos.bp)
+    app.register_blueprint(users.bp)
 
     return app
