@@ -13,7 +13,7 @@ def create_app():
     app.config.from_object(Config)
 
     JWTManager(app)
-    CORS(app)
+    CORS(app, supports_credentials=True)
 
     limiter.init_app(app)
 
