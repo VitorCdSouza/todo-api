@@ -1,15 +1,9 @@
-from enum import Enum
-from db import get_db_connection
+from app.db.connection import get_db_connection
+from app.models.todos import TodoStatus
 from psycopg2.extras import RealDictCursor
 
 
-# todo status enums
-class TodoStatus(Enum):
-    PENDENTE = "pendente"
-    INCOMPLETA = "incompleta"
-    COMPLETA = "completa"
-
-
+# methods for todo
 class TodoManager:
     def get_all(self):
         conn = get_db_connection()
