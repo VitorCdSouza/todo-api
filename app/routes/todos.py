@@ -84,16 +84,16 @@ def update_todo(todo_id):
         return jsonify({"error": "Todo not found"}), 404
 
     data = request.get_json()
-    updated_todo = todo_manager.update(
-        todo_id, data.get("title"), data.get("description"), data.get("status")
-    )
+    new_status = data.get("status")
+
+    updated_todo = todo_manager.update_status(todo_id, new_status)
 
     if updated_todo:
         cache_todos()
         cache_todo(updated_todo)
         return jsonify(updated_todo)
 
-    return jsonify(updated_todo)
+    return jsonify({"error": "Failed to update todo"}), 400
 
 
 # DELETE http://127.0.0.1:5000/todos/<id>

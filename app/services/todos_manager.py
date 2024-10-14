@@ -57,7 +57,6 @@ class TodoManager:
         conn = get_db_connection()
         cur = conn.cursor(cursor_factory=RealDictCursor)
 
-        # Atualiza apenas os campos que foram fornecidos
         set_clause = []
         params = []
 
@@ -85,6 +84,20 @@ class TodoManager:
         conn.commit()
         cur.close()
         conn.close()
+        return updated_todo
+
+    def update_status(self, todo_id, new_status):
+        conn = get_db_connection()
+        cur = conn.cursor(cursor_factory=RealDictCursor)
+
+        query = "UPDATE todos SET status = %s WHERE id = %s RETURNING *"
+        cur.execute(query, (new_status, todo_id))
+
+        updated_todo = cur.fetchone()
+        conn.commit()
+        cur.close()
+        conn.close()
+
         return updated_todo
 
     def delete(self, todo_id, user_id):
