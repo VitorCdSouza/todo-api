@@ -16,3 +16,7 @@ Funções simples: login, cadastro, crud de tarefas com atualizaçã do status.
 | POST   | new todo            | https://api.vtrcordeiro.online/todos/       | body: title, description, status    |
 | PUT    | update todo status  | https://api.vtrcordeiro.online/todos/<id>   | body: status                        |
 | DELETE | delete todo         | https://api.vtrcordeiro.online/todos/<id>   |                                     |
+|        |                     |                                             |                                     |
+| POST   | register user       | https://api.vtrcordeiro.online/register     | body: email, password               |
+| POST   | login user          | https://api.vtrcordeiro.online/login        | body: email, password               |
+| POST   | logout user         | https://api.vtrcordeiro.online/logout       | body: email, password               |
