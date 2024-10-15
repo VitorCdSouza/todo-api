@@ -5,4 +5,5 @@ Flask-JWT-Extended
 Flask-Login
 bcrypt
 psycopg2-binary
+python-dotenv
 redis
