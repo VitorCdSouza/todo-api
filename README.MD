@@ -9,7 +9,7 @@ Funções simples: login, cadastro, crud de tarefas com atualizaçã do status.
 
 ## Caminhos (todos necessitam de token junto a requisição):
 
-GET      get all                  https://api.vtrcordeiro.online/todos (parametros: ?per_page= ?page=)
+GET | get all                  https://api.vtrcordeiro.online/todos (parametros: ?per_page= ?page=)
 
 GET      get by id                https://api.vtrcordeiro.online/todos/<id>
 
